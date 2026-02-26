@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template
 
 app = Flask(
     __name__,
@@ -11,8 +11,9 @@ def home():
     return render_template("index.html")
 
 @app.route("/game")
-def about():
+def game():
     return render_template("game.html")
-# Required for Vercel
-def handler(event, context):
-    return app(event, context)
+
+@app.route("/favicon.ico")
+def favicon():
+    return "", 204  # prevents favicon 500 error
