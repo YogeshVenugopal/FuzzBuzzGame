@@ -1,4 +1,5 @@
 from flask import Flask, render_template
+from vercel_wsgi import make_handler
 
 app = Flask(
     __name__,
@@ -16,4 +17,7 @@ def game():
 
 @app.route("/favicon.ico")
 def favicon():
-    return "", 204  # prevents favicon 500 error
+    return "", 204
+
+# ✅ THIS is what Vercel actually executes
+handler = make_handler(app)
