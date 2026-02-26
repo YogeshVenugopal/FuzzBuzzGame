@@ -5,6 +5,11 @@ The AI maintains a list of all possible 4-digit combinations with unique digits.
 After each guess + feedback, it filters out any combination that would NOT
 produce the same bulls/cows result — drastically narrowing the search space.
 This is similar to Knuth's algorithm for Mastermind.
+
+Key design:
+- The human THINKS of a number; it is NEVER stored on the server.
+- The AI learns purely from the honest feedback the human provides.
+- No cheating: the AI cannot verify feedback against any stored secret.
 """
 
 from itertools import permutations
@@ -17,20 +22,13 @@ def generate_all_combinations():
     Leading zeros are allowed (e.g., '0123' is valid).
     Returns a list of strings.
     """
-    combos = []
-    for perm in permutations('0123456789', 4):
-        combos.append(''.join(perm))
-    return combos
+    return [''.join(p) for p in permutations('0123456789', 4)]
 
 
 def filter_candidates(candidates, guess, bulls, cows):
     """
-    Filter the candidate list by removing any number that would NOT produce
-    the same bulls/cows result if 'guess' were applied to it as the secret.
-
-    This is the core elimination step:
-    - For each remaining candidate, simulate: "if THIS were the secret and AI guessed 'guess', would we get (bulls, cows)?"
-    - Keep only candidates where the answer is YES.
+    Keep only candidates that would produce the same (bulls, cows) result
+    if 'guess' were applied to them as the secret.
     """
     filtered = []
     for candidate in candidates:
@@ -40,68 +38,100 @@ def filter_candidates(candidates, guess, bulls, cows):
     return filtered
 
 
+def get_candidates_from_history(history):
+    """Rebuild the candidate list by replaying all prior guesses + feedback."""
+    candidates = generate_all_combinations()
+    for entry in history:
+        candidates = filter_candidates(candidates, entry['guess'], entry['bulls'], entry['cows'])
+    return candidates
+
+
 def get_next_guess(candidates, guessed_set):
     """
-    Choose the next best guess from the remaining candidates.
+    Choose the next best guess.
 
     Strategy:
-    - First guess is always '0123' — a well-spread opener that maximizes information.
-    - Subsequent guesses: pick the first candidate not yet guessed.
-      (In a full Knuth implementation we'd use minimax; for hard mode this
-       greedy "pick first valid candidate" approach solves the puzzle in ≤7 moves
-       and is fast enough for a web game.)
+    - First guess: '0123' — a strong opener that probes 4 distinct digits.
+    - Subsequent guesses: use a minimax-style pick.
+      For each possible guess (from the full set), compute the worst-case
+      partition size. Pick the guess that minimises the worst-case remaining
+      candidates. Prefer guesses that are still in the candidate pool (they
+      could be the answer).
 
-    Returns the next guess string.
+    Falls back to first unguessed candidate if pool is small enough.
     """
-    # Classic strong opener — covers 4 distinct digits from the low range
     OPENER = '0123'
 
     if not guessed_set:
         return OPENER
 
-    # Pick first candidate that hasn't been guessed yet
-    for candidate in candidates:
-        if candidate not in guessed_set:
-            return candidate
+    # If only 1 or 2 candidates left, just guess them directly
+    unguessed_candidates = [c for c in candidates if c not in guessed_set]
+    if len(candidates) <= 2:
+        return unguessed_candidates[0] if unguessed_candidates else candidates[0]
 
-    # Fallback (should never happen in normal play)
-    return candidates[0] if candidates else '0123'
+    # Minimax: evaluate every possible guess from the full pool
+    # but cap at a reasonable subset to keep it fast for a web game
+    all_combos = generate_all_combinations()
+
+    best_guess = None
+    best_score = float('inf')
+    # prefer guesses still in candidates (they might be the answer)
+    candidate_set = set(candidates)
+
+    # To keep response time reasonable, evaluate candidates first,
+    # then all_combos if needed. With 5040 total this is fast enough.
+    eval_pool = list(candidates) + [c for c in all_combos if c not in candidate_set]
+
+    for guess in eval_pool:
+        if guess in guessed_set:
+            continue
+
+        # Partition remaining candidates by (bulls, cows) outcome
+        partitions = {}
+        for secret in candidates:
+            result = calculate_bulls_and_cows(secret, guess)
+            partitions[result] = partitions.get(result, 0) + 1
+
+        # Worst-case partition size (minimax criterion)
+        worst = max(partitions.values())
+
+        # Prefer smaller worst-case; break ties by preferring in-candidate guesses
+        in_candidates = guess in candidate_set
+        score = (worst, 0 if in_candidates else 1)
+
+        if score < (best_score, 0 if (best_guess in candidate_set if best_guess else False) else 1):
+            best_score = worst
+            best_guess = guess
+
+    return best_guess if best_guess else (unguessed_candidates[0] if unguessed_candidates else candidates[0])
 
 
 class AIBrainHard:
     """
     Stateful AI solver for hard-mode Bulls or Cows.
-    Keeps all state as plain dicts/lists so it can be stored in Flask session.
+    State stored as plain dicts/lists for Flask session serialization.
+    The AI never knows the human's secret — it only uses feedback.
     """
 
     @staticmethod
     def initial_state():
-        """Return a fresh solver state dict to store in session."""
+        """Return a fresh solver state dict."""
         return {
-            'guessed': [],           # history of AI's own guesses
-            'current_guess': None,   # the current pending guess
+            'guessed': [],          # list of {guess, bulls, cows}
+            'current_guess': None,  # pending guess awaiting feedback
         }
 
     @staticmethod
     def make_guess(state):
         """
-        Choose next guess, record it, and update state.
+        Choose next guess using minimax elimination, record it, return it.
         Returns (guess_string, updated_state).
         """
-        # Regenerate candidates to filter based on previous feedback
-        all_candidates = generate_all_combinations()
-        candidates = all_candidates
-        
-        # Reconstruct the candidate list by replaying history
-        # This avoids storing ~5040 numbers in the session
         guessed_list = state.get('guessed', [])
-        for i, guess_entry in enumerate(guessed_list):
-            guess = guess_entry['guess']
-            bulls = guess_entry['bulls']
-            cows = guess_entry['cows']
-            candidates = filter_candidates(candidates, guess, bulls, cows)
-        
-        guessed_set = set([g['guess'] for g in guessed_list])
+        candidates = get_candidates_from_history(guessed_list)
+        guessed_set = {g['guess'] for g in guessed_list}
+
         guess = get_next_guess(candidates, guessed_set)
         state['current_guess'] = guess
         return guess, state
@@ -109,18 +139,16 @@ class AIBrainHard:
     @staticmethod
     def apply_feedback(state, bulls, cows):
         """
-        Apply human-provided feedback (bulls, cows) for the current guess.
-        Records the guess with its feedback for future candidate filtering.
+        Record the human's feedback for the current pending guess.
+        This narrows the candidate pool for the next guess.
         Returns updated_state.
         """
-        guess = state['current_guess']
+        guess = state.get('current_guess')
         if guess is None:
             return state
 
-        # Record guess with feedback (we'll use this to filter candidates later)
         guessed_list = state.get('guessed', [])
         guessed_list.append({'guess': guess, 'bulls': bulls, 'cows': cows})
         state['guessed'] = guessed_list
         state['current_guess'] = None
-
         return state

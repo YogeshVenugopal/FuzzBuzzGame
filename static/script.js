@@ -355,7 +355,10 @@ async function submitAiFeedback() {
 
     if (data.won) {
       hide('aiCard');
-      setTimeout(() => showWinner('ai', data.human_secret), 400);
+      // Show AI's winning guess (the number it cracked)
+      const aiDisplay = document.getElementById('aiGuessDisplay');
+      const winGuess = (aiDisplay ? aiDisplay.textContent : '????').replace(/\s/g, '');
+      setTimeout(() => showWinner('ai', winGuess), 400);
       return;
     }
 
@@ -408,9 +411,9 @@ function showWinner(winner, revealedSecret) {
   document.getElementById('winTitle').textContent  = isHuman ? 'HUMAN WINS!' : 'AI WINS!';
   document.getElementById('winSub').textContent    = isHuman
     ? `You cracked the AI's secret number!`
-    : `The AI cracked your secret number!`;
+    : `The AI figured out your secret number!`;
   document.getElementById('winSecret').textContent = revealedSecret
-    ? revealedSecret.split('').join(' ')
+    ? `The number was: ${revealedSecret.split('').join(' ')}`
     : '';
 
   overlay.style.display = 'flex';
