@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bulls or Cows — Game</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body class="game-page">
+
+  <!-- Animated background -->
+  <div class="bg-grid"></div>
+  <div class="bg-orb orb-1"></div>
+  <div class="bg-orb orb-2"></div>
+
+  <!-- ══════════════════════════════════════
+       MAIN GAME LAYOUT
+  ══════════════════════════════════════ -->
+  <div class="game-layout">
+
+    <!-- Sidebar: History -->
+    <aside class="history-panel">
+      <div class="history-title">GAME LOG</div>
+
+      <div class="history-section">
+        <div class="history-label">🧑 YOUR GUESSES</div>
+        <div id="humanHistory" class="history-list">
+          <div class="history-empty">No guesses yet…</div>
+        </div>
+      </div>
+
+      <div class="history-section">
+        <div class="history-label">🤖 AI GUESSES</div>
+        <div id="aiHistory" class="history-list">
+          <div class="history-empty">No guesses yet…</div>
+        </div>
+      </div>
+
+      <button class="btn-reset" onclick="resetGame()">↩ NEW GAME</button>
+    </aside>
+
+    <!-- Main arena -->
+    <main class="game-arena">
+
+      <header class="game-header">
+        <div class="game-logo">BULLS <span>or</span> COWS</div>
+        <div class="mode-badge">HARD MODE</div>
+      </header>
+
+      <!-- ── HUMAN TURN CARD ── -->
+      <div class="turn-card" id="humanCard">
+        <div class="turn-icon">🧑</div>
+        <div class="turn-label">YOUR TURN</div>
+        <p class="turn-hint">Guess the AI's 4-digit secret</p>
+
+        <div class="otp-row" id="guessInputs">
+          <input class="otp-box" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off" data-index="0" />
+          <input class="otp-box" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off" data-index="1" />
+          <input class="otp-box" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off" data-index="2" />
+          <input class="otp-box" type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off" data-index="3" />
+        </div>
+
+        <div id="humanError" class="error-msg" style="display:none;"></div>
+
+        <button class="btn-primary" id="btnHumanSubmit" onclick="submitHumanGuess()">
+          SUBMIT GUESS →
+        </button>
+      </div>
+
+      <!-- ── RESULT FLASH ── -->
+      <div class="result-flash" id="resultFlash" style="display:none;">
+        <div class="result-emoji" id="resultEmoji">🎯</div>
+        <div class="result-score" id="resultScore"></div>
+        <div class="result-sub" id="resultSub"></div>
+      </div>
+
+      <!-- ── AI TURN CARD ── -->
+      <div class="turn-card ai-card" id="aiCard" style="display:none;">
+        <div class="turn-icon">🤖</div>
+        <div class="turn-label">AI TURN</div>
+        <p class="turn-hint">Rate the AI's guess</p>
+
+        <div class="ai-guess-display">
+          <div class="ai-guess-label">AI guesses:</div>
+          <div class="ai-guess-number" id="aiGuessDisplay">????</div>
+        </div>
+
+        <p class="feedback-hint">How many Bulls 🐂 and Cows 🐄?</p>
+
+        <div class="feedback-row">
+          <div class="feedback-group">
+            <label>🐂 Bulls</label>
+            <select id="aiBulls" class="feedback-select">
+              <option value="0">0</option>
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+            </select>
+          </div>
+          <div class="feedback-group">
+            <label>🐄 Cows</label>
+            <select id="aiCows" class="feedback-select">
+              <option value="0">0</option>
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="aiError" class="error-msg" style="display:none;"></div>
+
+        <button class="btn-primary ai-btn" id="btnAiFeedback" onclick="submitAiFeedback()">
+          SUBMIT FEEDBACK →
+        </button>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       WIN OVERLAY
+  ══════════════════════════════════════ -->
+  <div id="winOverlay" class="win-overlay" style="display:none;">
+    <canvas id="confettiCanvas"></canvas>
+
+    <div class="win-card">
+      <div class="win-emoji" id="winEmoji"></div>
+      <h2 class="win-title" id="winTitle"></h2>
+      <p class="win-sub" id="winSub"></p>
+      <div class="win-secret" id="winSecret"></div>
+      <button class="btn-start win-replay" onclick="resetGame()">PLAY AGAIN →</button>
+    </div>
+  </div>
+
+  <script src="/static/script.js"></script>
+  <script>
+    // Init OTP boxes for the guess row
+    initOtpBoxes('guessInputs');
+    // Kick off the first human turn
+    showHumanTurn();
+  </script>
+</body>
+</html>

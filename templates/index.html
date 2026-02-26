@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bulls or Cows</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body class="landing-page">
+
+  <!-- Animated background grid -->
+  <div class="bg-grid"></div>
+  <div class="bg-orb orb-1"></div>
+  <div class="bg-orb orb-2"></div>
+
+  <div class="landing-container">
+
+    <!-- Header -->
+    <header class="landing-header">
+      <h1 class="landing-title">
+        <span class="title-bulls">BULLS</span>
+        <span class="title-or">or</span>
+        <span class="title-cows">COWS</span>
+      </h1>
+      <p class="landing-sub">AI vs Human · Guess the secret number</p>
+    </header>
+
+    <!-- Rules card -->
+    <section class="rules-card">
+      <div class="rules-header">
+        <span class="rules-icon">📋</span>
+        <h2>HOW TO PLAY</h2>
+      </div>
+
+      <div class="rules-grid">
+        <div class="rule-item">
+          <div class="rule-num">01</div>
+          <div class="rule-text">The human's <strong>4-digit secret</strong> is pre-set with all unique digits. (Developer configured)</div>
+        </div>
+        <div class="rule-item">
+          <div class="rule-num">02</div>
+          <div class="rule-text"><strong>You guess first.</strong> Each round alternates: Human → AI → Human…</div>
+        </div>
+        <div class="rule-item">
+          <div class="rule-num">03</div>
+          <div class="rule-text">
+            After each guess you get:
+            <span class="tag bull-tag">🐂 Bull</span> correct digit, correct position ·
+            <span class="tag cow-tag">🐄 Cow</span> correct digit, wrong position
+          </div>
+        </div>
+        <div class="rule-item">
+          <div class="rule-num">04</div>
+          <div class="rule-text">The AI discovers the pattern through feedback. You provide honest bull/cow counts for AI guesses.</div>
+        </div>
+        <div class="rule-item">
+          <div class="rule-num">05</div>
+          <div class="rule-text"><strong>4 Bulls = WIN.</strong> First player to crack the code takes the crown!</div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Start Button -->
+    <section class="start-section">
+      <button class="btn-start" id="btnStartGame" onclick="quickStartGame()">
+        <span>START GAME</span>
+        <span class="btn-arrow">→</span>
+      </button>
+    </section>
+
+  </div>
+
+
+
+  <script src="/static/script.js"></script>
+  <script>
+    // Nothing to init on landing page
+  </script>
+</body>
+</html>
