@@ -6,7 +6,7 @@
   <title>Bulls or Cows</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../static/style.css" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
 </head>
 <body class="landing-page">
 
@@ -75,7 +75,7 @@
   <!-- Footer -->
   <footer class="landing-footer">
     <div class="footer-content">
-      <span class="footer-icon"><img src="../static/IPS WHITE batch 1-B.png" alt="Community Logo"></span>
+      <span class="footer-icon"><img src="{{ url_for('static', filename='IPS WHITE batch 1-B.png') }}" alt="Community Logo"></span>
       <span class="footer-text">Created by <strong>IPS Tech Community</strong> for <strong>PyExpo</strong></span>
     </div>
   </footer>
