@@ -53,59 +53,47 @@ def get_next_guess(candidates, guessed_set):
     Strategy:
     - First guess: '0123' — a strong opener that probes 4 distinct digits.
     - Subsequent guesses: use a minimax-style pick.
-      For each possible guess (from the full set), compute the worst-case
-      partition size. Pick the guess that minimises the worst-case remaining
-      candidates. Prefer guesses that are still in the candidate pool (they
-      could be the answer).
-
-    Falls back to first unguessed candidate if pool is small enough.
     """
     OPENER = '0123'
 
     if not guessed_set:
         return OPENER
 
-    # If only 1 or 2 candidates left, just guess them directly
     unguessed_candidates = [c for c in candidates if c not in guessed_set]
     if len(candidates) <= 2:
         return unguessed_candidates[0] if unguessed_candidates else candidates[0]
 
-    # Minimax: evaluate every possible guess from the full pool
-    # but cap at a reasonable subset to keep it fast for a web game
     all_combos = generate_all_combinations()
-
     best_guess = None
     best_score = float('inf')
-    # prefer guesses still in candidates (they might be the answer)
     candidate_set = set(candidates)
-
-    # To keep response time reasonable, evaluate candidates first,
-    # then all_combos if needed. With 5040 total this is fast enough.
+    
     eval_pool = list(candidates) + [c for c in all_combos if c not in candidate_set]
 
     for guess in eval_pool:
         if guess in guessed_set:
             continue
 
-        # Partition remaining candidates by (bulls, cows) outcome
         partitions = {}
         for secret in candidates:
             result = calculate_bulls_and_cows(secret, guess)
             partitions[result] = partitions.get(result, 0) + 1
 
-        # Worst-case partition size (minimax criterion)
-        worst = max(partitions.values())
-
-        # Prefer smaller worst-case; break ties by preferring in-candidate guesses
+        worst = max(partitions.values()) if partitions else float('inf')
         in_candidates = guess in candidate_set
-        score = (worst, 0 if in_candidates else 1)
 
-        if score < (best_score, 0 if (best_guess in candidate_set if best_guess else False) else 1):
-            best_score = worst
+        # Simple score: prefer smaller worst-case, tie-break by candidate membership
+        current_score = (worst, 0 if in_candidates else 1)
+        
+        # Initialize or compare properly
+        if best_guess is None:
             best_guess = guess
+            best_score = current_score
+        elif current_score < best_score:
+            best_guess = guess
+            best_score = current_score
 
     return best_guess if best_guess else (unguessed_candidates[0] if unguessed_candidates else candidates[0])
-
 
 class AIBrainHard:
     """

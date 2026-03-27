@@ -41,14 +41,10 @@ def game():
 
 @app.route('/start', methods=['POST'])
 def start():
-    """
-    Initialize a new game.
-    The human THINKS of a secret — never stored server-side.
-    AI uses only the feedback the human gives to narrow candidates.
-    """
-    session.clear()
+    """Initialize a new game with fresh state."""
+    session.clear()  # ← Ensures old AI state doesn't persist
     session['ai_secret'] = pick_ai_secret()
-    session['ai_state'] = AIBrainHard.initial_state()
+    session['ai_state'] = AIBrainHard.initial_state()  # ← Fresh AI state
     session['human_guesses'] = []
     session['ai_guesses'] = []
     session['game_over'] = False
@@ -87,9 +83,10 @@ def human_turn():
     if won:
         session['game_over'] = True
         session['winner'] = 'human'
+        # Do not reveal the AI's secret on human victory per request.
         return jsonify({
             'success': True, 'bulls': bulls, 'cows': cows,
-            'won': True, 'winner': 'human', 'ai_secret': ai_secret,
+            'won': True, 'winner': 'human',
         })
 
     session['turn'] = 'ai'
@@ -154,20 +151,28 @@ def ai_feedback():
     if won:
         session['game_over'] = True
         session['winner'] = 'ai'
+        # Reveal the AI's fixed secret at the end only when AI wins.
         return jsonify({
             'success': True, 'won': True, 'winner': 'ai',
             'ai_guess': real_guess,
+            'ai_secret': session.get('ai_secret'),
         })
 
     # Check remaining candidates — detect contradictory feedback
     candidates = generate_all_combinations()
     for entry in ai_state.get('guessed', []):
+        before_count = len(candidates)
         candidates = filter_candidates(candidates, entry['guess'], entry['bulls'], entry['cows'])
+        after_count = len(candidates)
+        print(f"[DEBUG] Guess: {entry['guess']} | Bulls: {entry['bulls']}, Cows: {entry['cows']} | Candidates: {before_count} → {after_count}")
 
     if len(candidates) == 0:
+        # Show which guess caused the contradiction
+        problematic_guess = ai_state.get('guessed', [])[-1] if ai_state.get('guessed') else {}
         return error_response(
-            'No valid numbers remain! Your feedback may be inconsistent. '
-            'Please verify your answers or start a new game.'
+            f'No valid numbers remain! The feedback for guess "{problematic_guess.get("guess")}" '
+            f'({problematic_guess.get("bulls")} bulls, {problematic_guess.get("cows")} cows) '
+            f'may be inconsistent with previous feedback. Please verify your answers or start a new game.'
         )
 
     session['turn'] = 'human'

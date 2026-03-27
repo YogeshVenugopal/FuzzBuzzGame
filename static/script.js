@@ -228,7 +228,8 @@ async function submitHumanGuess() {
     showResultFlash(guess, data.bulls, data.cows);
 
     if (data.won) {
-      setTimeout(() => showWinner('human', data.ai_secret), 2000);
+      // Per requirement: do not show AI secret when human wins.
+      setTimeout(() => showWinner('human', null), 2000);
       return;
     }
 
@@ -355,10 +356,11 @@ async function submitAiFeedback() {
 
     if (data.won) {
       hide('aiCard');
-      // Show AI's winning guess (the number it cracked)
+      // Reveal AI's fixed secret only when AI wins, as requested.
       const aiDisplay = document.getElementById('aiGuessDisplay');
-      const winGuess = (aiDisplay ? aiDisplay.textContent : '????').replace(/\s/g, '');
-      setTimeout(() => showWinner('ai', winGuess), 400);
+      const fallback = aiDisplay ? aiDisplay.textContent.replace(/\s/g, '') : '????';
+      const revealed = data.ai_secret || fallback;
+      setTimeout(() => showWinner('ai', revealed), 400);
       return;
     }
 
@@ -413,7 +415,7 @@ function showWinner(winner, revealedSecret) {
     ? `You cracked the AI's secret number!`
     : `The AI figured out your secret number!`;
   document.getElementById('winSecret').textContent = revealedSecret
-    ? `The number was: ${revealedSecret.split('').join(' ')}`
+    ? `The AI Secret Number: ${revealedSecret.split('').join(' ')}`
     : '';
 
   overlay.style.display = 'flex';

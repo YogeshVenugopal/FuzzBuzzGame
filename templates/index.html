@@ -37,7 +37,10 @@
       <div class="rules-grid">
         <div class="rule-item">
           <div class="rule-num">01</div>
-          <div class="rule-text">Think of a <strong>4-digit secret number</strong> with all unique digits. Keep it in your head — never type it in!</div>
+          <div class="rule-text">
+            Think of a <strong>4-digit secret number</strong> with <strong>ALL UNIQUE DIGITS</strong> (no repeats). 
+            <span style="color: #888; font-size: 0.9em;">Example: 2000 ✗ (has three 0s), 2947 ✓ (all different)</span>
+          </div>
         </div>
         <div class="rule-item">
           <div class="rule-num">02</div>
@@ -46,18 +49,22 @@
         <div class="rule-item">
           <div class="rule-num">03</div>
           <div class="rule-text">
-            After each guess you get:
-            <span class="tag bull-tag">🐂 Bull</span> correct digit, correct position ·
-            <span class="tag cow-tag">🐄 Cow</span> correct digit, wrong position
+            After each guess, you give feedback:
+            <br/>
+            <span class="tag bull-tag">🐂 Bull</span> = correct digit<strong>,</strong> correct position
+            <br/>
+            <span class="tag cow-tag">🐄 Cow</span> = correct digit<strong>,</strong> wrong position
+            <br/>
+            <span style="color: #888; font-size: 0.9em;">Example: Secret is 2947 → You guess 2000 → 1 Bull (first digit), 0 Cows</span>
           </div>
         </div>
         <div class="rule-item">
           <div class="rule-num">04</div>
-          <div class="rule-text">The AI discovers your number purely through feedback. Be honest with your bull/cow counts — the AI has no other way to know!</div>
+          <div class="rule-text">The AI discovers your number purely through feedback. <strong>Be honest</strong> with your bull/cow counts — the AI has no other way to know!</div>
         </div>
         <div class="rule-item">
           <div class="rule-num">05</div>
-          <div class="rule-text"><strong>4 Bulls = WIN.</strong> First player to crack the code takes the crown!</div>
+          <div class="rule-text"><strong>4 Bulls = WIN! 🎉</strong> First player to crack the code takes the crown!</div>
         </div>
 
       </div>
@@ -76,7 +83,7 @@
   <footer class="landing-footer">
     <div class="footer-content">
       <span class="footer-icon"><img src="{{ url_for('static', filename='ips-logo.png') }}" alt="Community Logo"></span>
-      <span class="footer-text">Created by <strong>IPS Tech Community</strong> for <strong>PyExpo</strong></span>
+      <span class="footer-text">Created by <strong><a href="https://github.com/ips-tech-community" target="_blank">IPS Tech Community</a></strong> for <strong><a href="https://pyexpo2k26.pages.dev/" target="_blank">PyExpo</a></strong></span>
     </div>
   </footer>
 
